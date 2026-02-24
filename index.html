@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>РемКонтроль — App</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0f14;--surface:#161a22;--surface2:#1e232e;--surface3:#252b37;
+  --border:rgba(255,255,255,0.07);--accent:#f59e0b;--accent2:#ef4444;
+  --text:#f0f2f5;--muted:#8b93a7;--green:#22c55e;--blue:#3b82f6;
+  --purple:#8b5cf6;--radius:16px;
+}
+html,body{height:100%;background:var(--bg);font-family:'Manrope',sans-serif;color:var(--text)}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+
+/* ── PHONE FRAME ── */
+.phone{
+  width:390px;height:844px;
+  background:var(--surface);border-radius:52px;
+  border:10px solid #1a1f2b;
+  box-shadow:0 60px 120px rgba(0,0,0,0.7),inset 0 0 0 1px rgba(255,255,255,0.05);
+  display:flex;flex-direction:column;overflow:hidden;position:relative;flex-shrink:0;
+}
+
+/* notch */
+.notch{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:126px;height:34px;background:#1a1f2b;border-radius:0 0 18px 18px;
+  z-index:20;
+}
+
+/* STATUS BAR */
+.statusbar{
+  height:44px;padding:12px 24px 0;display:flex;align-items:center;
+  justify-content:space-between;font-size:12px;font-weight:700;
+  color:var(--text);flex-shrink:0;position:relative;z-index:10;
+}
+.statusbar-time{padding-left:8px}
+.statusbar-icons{display:flex;gap:6px;align-items:center;padding-right:4px}
+
+/* APP HEADER */
+.appbar{
+  padding:8px 20px 14px;display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;border-bottom:1px solid var(--border);
+}
+.appbar-left{display:flex;flex-direction:column}
+.appbar-title{font-size:18px;font-weight:800;letter-spacing:-0.5px}
+.appbar-sub{font-size:12px;color:var(--muted);margin-top:1px}
+.appbar-avatar{
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),var(--purple));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:800;color:#000;
+}
+
+/* SCROLL CONTENT */
+.screen{
+  flex:1;overflow-y:auto;padding:16px 16px 8px;
+  display:none;flex-direction:column;gap:12px;
+  scrollbar-width:none;
+}
+.screen::-webkit-scrollbar{display:none}
+.screen.active{display:flex}
+
+/* BOTTOM TABS */
+.tabs{
+  height:82px;display:flex;border-top:1px solid var(--border);
+  background:var(--surface);flex-shrink:0;padding:0 4px 16px;
+}
+.tab{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;cursor:pointer;border:none;background:none;color:var(--muted);
+  font-family:inherit;font-size:10px;font-weight:600;letter-spacing:0.2px;
+  transition:color .2s;padding:8px 0;
+}
+.tab.active{color:var(--accent)}
+.tab-icon{font-size:20px;line-height:1;transition:transform .2s}
+.tab.active .tab-icon{transform:scale(1.1)}
+
+/* ── CARDS ── */
+.card{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:16px;
+}
+.card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+
+/* ── HOME SCREEN ── */
+.project-banner{
+  background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(139,92,246,0.1));
+  border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius);
+  padding:18px;display:flex;flex-direction:column;gap:12px;
+}
+.project-name{font-size:16px;font-weight:800}
+.project-addr{font-size:12px;color:var(--muted)}
+.stages-row{display:flex;gap:6px;margin-top:4px}
+.stage-pill{
+  padding:4px 10px;border-radius:50px;font-size:11px;font-weight:700;
+}
+.pill-done{background:rgba(34,197,94,0.15);color:var(--green)}
+.pill-active{background:rgba(245,158,11,0.15);color:var(--accent)}
+.pill-wait{background:rgba(139,147,167,0.12);color:var(--muted)}
+
+.progress-card{}
+.progress-label{display:flex;justify-content:space-between;font-size:13px;font-weight:600;margin-bottom:8px}
+.progress-label span:last-child{color:var(--muted);font-weight:500}
+.pbar{height:8px;border-radius:50px;background:var(--border);overflow:hidden;margin-bottom:12px}
+.pbar-fill{height:100%;border-radius:50px}
+
+.metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.metric{background:var(--surface3);border-radius:12px;padding:14px}
+.metric-val{font-size:20px;font-weight:800;letter-spacing:-0.5px}
+.metric-label{font-size:11px;color:var(--muted);margin-top:3px}
+
+.activity-list{display:flex;flex-direction:column;gap:0}
+.act-item{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:12px 0;border-bottom:1px solid var(--border);
+}
+.act-item:last-child{border-bottom:none}
+.act-dot{
+  width:32px;height:32px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:14px;margin-top:1px;
+}
+.act-body{flex:1}
+.act-title{font-size:13px;font-weight:600;line-height:1.3}
+.act-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.act-time{font-size:10px;color:var(--muted);flex-shrink:0;margin-top:3px}
+
+/* ── JOURNAL SCREEN ── */
+.journal-filter{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.journal-filter::-webkit-scrollbar{display:none}
+.jf-btn{
+  flex-shrink:0;padding:6px 14px;border-radius:50px;font-size:12px;font-weight:700;
+  border:1px solid var(--border);background:transparent;color:var(--muted);
+  cursor:pointer;font-family:inherit;transition:all .2s;
+}
+.jf-btn.active{background:var(--accent);border-color:var(--accent);color:#000}
+
+.journal-list{display:flex;flex-direction:column;gap:10px}
+.jcard{
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;
+}
+.jcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.jcard-title{font-size:13px;font-weight:700;line-height:1.4;flex:1}
+.jstatus{padding:3px 10px;border-radius:50px;font-size:10px;font-weight:700;flex-shrink:0}
+.js-ok{background:rgba(34,197,94,0.12);color:var(--green)}
+.js-pending{background:rgba(245,158,11,0.12);color:var(--accent)}
+.js-bad{background:rgba(239,68,68,0.12);color:#f87171}
+.jcard-meta{display:flex;align-items:center;gap:10px}
+.jmeta-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted)}
+.jcard-quote{
+  background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 12px;
+  font-size:11px;color:var(--muted);line-height:1.5;border-left:2px solid var(--accent);
+}
+.jcard-photo{
+  height:80px;border-radius:10px;overflow:hidden;background:var(--surface3);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:12px;gap:6px;border:1px solid var(--border);
+}
+
+.fab{
+  position:sticky;bottom:0;padding:8px 0 0;display:flex;justify-content:flex-end;
+}
+.fab-btn{
+  background:var(--accent);color:#000;border:none;cursor:pointer;
+  width:48px;height:48px;border-radius:50%;font-size:22px;font-weight:300;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 24px rgba(245,158,11,0.4);font-family:inherit;
+  transition:transform .2s;
+}
+.fab-btn:hover{transform:scale(1.1)}
+
+/* ── BUDGET SCREEN ── */
+.budget-hero{
+  background:linear-gradient(135deg,rgba(34,197,94,0.1),rgba(59,130,246,0.1));
+  border:1px solid rgba(34,197,94,0.15);border-radius:var(--radius);
+  padding:20px;text-align:center;
+}
+.budget-num{font-size:32px;font-weight:800;letter-spacing:-1px}
+.budget-sub{font-size:12px;color:var(--muted);margin-top:4px}
+.budget-row{display:flex;justify-content:space-around;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)}
+.bstat{text-align:center}
+.bstat-val{font-size:16px;font-weight:800}
+.bstat-label{font-size:10px;color:var(--muted);margin-top:2px}
+
+.cat-list{display:flex;flex-direction:column;gap:10px}
+.cat-item{}
+.cat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.cat-name{font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.cat-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px}
+.cat-amt{font-size:12px;color:var(--muted)}
+.cat-fact{font-size:12px;font-weight:700}
+.cat-bar{height:6px;border-radius:50px;background:var(--border);overflow:hidden}
+.cat-fill{height:100%;border-radius:50px}
+
+.tx-list{display:flex;flex-direction:column;gap:0}
+.tx-item{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)}
+.tx-item:last-child{border-bottom:none}
+.tx-left{display:flex;align-items:center;gap:10px}
+.tx-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.tx-name{font-size:13px;font-weight:600}
+.tx-date{font-size:11px;color:var(--muted)}
+.tx-amt{font-size:13px;font-weight:700}
+.tx-ok{color:var(--muted)}
+.tx-warn{color:var(--accent)}
+
+/* ── CHECKLIST SCREEN ── */
+.stage-list{display:flex;flex-direction:column;gap:10px}
+.scard{background:var(--surface2);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.scard-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px;cursor:pointer;user-select:none;
+}
+.scard-left{display:flex;align-items:center;gap:10px}
+.scard-icon{
+  width:36px;height:36px;border-radius:10px;display:flex;align-items:center;
+  justify-content:center;font-size:16px;flex-shrink:0;
+}
+.scard-name{font-size:13px;font-weight:700}
+.scard-progress{font-size:11px;color:var(--muted);margin-top:2px}
+.scard-arrow{color:var(--muted);font-size:12px;transition:transform .2s}
+.scard.open .scard-arrow{transform:rotate(90deg)}
+.scard-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}
+.scard.open .scard-body{display:block}
+
+.check-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.check-item{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.check-box{
+  width:20px;height:20px;border-radius:6px;border:2px solid var(--border);
+  flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;
+  transition:all .2s;font-size:11px;
+}
+.check-item.checked .check-box{background:var(--green);border-color:var(--green);color:#fff}
+.check-item.warn .check-box{background:var(--accent2);border-color:var(--accent2);color:#fff}
+.check-text{font-size:12px;line-height:1.5;color:var(--text)}
+.check-item.checked .check-text{color:var(--muted);text-decoration:line-through}
+.check-note{
+  font-size:10px;color:var(--accent2);margin-top:2px;
+  background:rgba(239,68,68,0.08);border-radius:6px;padding:3px 8px;display:inline-block;
+}
+
+/* scrollbar */
+.screen{-webkit-overflow-scrolling:touch}
+
+/* desktop fallback */
+@media(max-width:440px){
+  .phone{width:100%;height:calc(100vh - 0px);border-radius:0;border:none}
+  body{padding:0;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <!-- STATUS BAR -->
+  <div class="statusbar">
+    <span class="statusbar-time">9:41</span>
+    <div class="statusbar-icons">
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><rect x="0" y="4" width="3" height="8" rx="1" opacity=".3"/><rect x="4" y="2.5" width="3" height="9.5" rx="1" opacity=".5"/><rect x="8" y="1" width="3" height="11" rx="1" opacity=".7"/><rect x="12" y="0" width="3" height="12" rx="1"/></svg>
+      <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2C5.5 2 3.3 3 1.7 4.6L0 2.8C2.1 1 4.9 0 8 0s5.9 1 8 2.8L14.3 4.6C12.7 3 10.5 2 8 2zm0 4c-1.4 0-2.7.5-3.6 1.4L2.7 5.7C4.1 4.6 5.9 4 8 4s3.9.6 5.3 1.7L11.6 7.4C10.7 6.5 9.4 6 8 6zm0 4c-.8 0-1.5.3-2 .8L4.3 9.1C5.2 8.4 6.5 8 8 8s2.8.4 3.7 1.1L10 10.8C9.5 10.3 8.8 10 8 10z"/></svg>
+      <span style="font-size:12px;font-weight:700">🔋</span>
+    </div>
+  </div>
+
+  <!-- APP HEADER -->
+  <div class="appbar">
+    <div class="appbar-left">
+      <div class="appbar-title" id="screen-title">Мой ремонт</div>
+      <div class="appbar-sub" id="screen-sub">Квартира на Ленина, 42</div>
+    </div>
+    <div class="appbar-avatar">О</div>
+  </div>
+
+  <!-- ══ SCREEN: HOME ══ -->
+  <div class="screen active" id="screen-home">
+
+    <div class="project-banner">
+      <div>
+        <div class="project-name">Квартира на Ленина, 42</div>
+        <div class="project-addr" style="margin-top:2px">3-комн · 78 м² · Прораб Сергей</div>
+      </div>
+      <div class="stages-row">
+        <span class="stage-pill pill-done">✓ Черновые</span>
+        <span class="stage-pill pill-active">⚡ Электрика</span>
+        <span class="stage-pill pill-wait">Сантехника</span>
+        <span class="stage-pill pill-wait">Отделка</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Общий прогресс</div>
+      <div class="progress-label"><span>Сроки</span><span>78 из 120 дней</span></div>
+      <div class="pbar"><div class="pbar-fill" style="width:65%;background:linear-gradient(90deg,var(--blue),var(--purple))"></div></div>
+      <div class="progress-label"><span>Бюджет</span><span>1 340 000 / 2 000 000 ₽</span></div>
+      <div class="pbar"><div class="pbar-fill" style="width:67%;background:linear-gradient(90deg,var(--green),var(--accent))"></div></div>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric">
+        <div class="metric-val" style="color:var(--accent2)">+140 000 ₽</div>
+        <div class="metric-label">Допрасходы</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:var(--accent)">+8 дней</div>
+        <div class="metric-label">Отставание</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:var(--green)">12</div>
+        <div class="metric-label">Согласований</div>
+      </div>
+      <div class="metric">
+        <div class="metric-val" style="color:var(--blue)">3</div>
+        <div class="metric-label">Открытых споров</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Последние события</div>
+      <div class="activity-list">
+        <div class="act-item">
+          <div class="act-dot" style="background:rgba(239,68,68,0.12)">🚨</div>
+          <div class="act-body">
+            <div class="act-title">Допрасход: плитка 23 м² без чека</div>
+            <div class="act-sub">Прораб Сергей · Требует подтверждения</div>
+          </div>
+          <div class="act-time">10 мин</div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:rgba(34,197,94,0.12)">📸</div>
+          <div class="act-body">
+            <div class="act-title">Фотоотчёт за 23 февраля загружен</div>
+            <div class="act-sub">Электрика · 8 фотографий</div>
+          </div>
+          <div class="act-time">1 ч</div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:rgba(245,158,11,0.12)">✅</div>
+          <div class="act-body">
+            <div class="act-title">Черновые работы приняты по чек-листу</div>
+            <div class="act-sub">16 из 16 пунктов · Подписан акт</div>
+          </div>
+          <div class="act-time">вчера</div>
+        </div>
+        <div class="act-item">
+          <div class="act-dot" style="background:rgba(59,130,246,0.12)">💬</div>
+          <div class="act-body">
+            <div class="act-title">Согласован цвет затирки — «Антрацит»</div>
+            <div class="act-sub">Вы и Сергей · Фото-пример прикреплён</div>
+          </div>
+          <div class="act-time">вчера</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: JOURNAL ══ -->
+  <div class="screen" id="screen-journal">
+    <div class="journal-filter">
+      <button class="jf-btn active">Все</button>
+      <button class="jf-btn">Согласовано</button>
+      <button class="jf-btn">Ожидает</button>
+      <button class="jf-btn">Спор</button>
+    </div>
+
+    <div class="journal-list">
+
+      <div class="jcard">
+        <div class="jcard-top">
+          <div class="jcard-title">Замена плитки в ванной: «Атлас Конкорд», артикул B-412</div>
+          <span class="jstatus js-ok">Принято</span>
+        </div>
+        <div class="jcard-meta">
+          <span class="jmeta-item">📅 21 фев</span>
+          <span class="jmeta-item">👤 Вы + Сергей</span>
+          <span class="jmeta-item">📎 2 фото</span>
+        </div>
+        <div class="jcard-quote">«Берём вот эту, отправила фото из магазина» — согласовано в 14:32</div>
+      </div>
+
+      <div class="jcard">
+        <div class="jcard-top">
+          <div class="jcard-title">Допрасход: 23 м² плитки — 48 600 ₽</div>
+          <span class="jstatus js-bad">Спор</span>
+        </div>
+        <div class="jcard-meta">
+          <span class="jmeta-item">📅 24 фев</span>
+          <span class="jmeta-item">👤 Сергей</span>
+          <span class="jmeta-item">⚠️ Нет чека</span>
+        </div>
+        <div class="jcard-quote">Сергей: «Докупил плитку, в смете не хватало». Чек не предоставлен.</div>
+      </div>
+
+      <div class="jcard">
+        <div class="jcard-top">
+          <div class="jcard-title">Цвет затирки — «Антрацит» № 114</div>
+          <span class="jstatus js-ok">Принято</span>
+        </div>
+        <div class="jcard-meta">
+          <span class="jmeta-item">📅 23 фев</span>
+          <span class="jmeta-item">👤 Вы</span>
+          <span class="jmeta-item">📎 1 фото</span>
+        </div>
+        <div class="jcard-photo">🖼️ фото-образец прикреплён</div>
+      </div>
+
+      <div class="jcard">
+        <div class="jcard-top">
+          <div class="jcard-title">Перенос розетки в спальне на 40 см влево</div>
+          <span class="jstatus js-pending">Ожидает</span>
+        </div>
+        <div class="jcard-meta">
+          <span class="jmeta-item">📅 24 фев</span>
+          <span class="jmeta-item">👤 Вы</span>
+          <span class="jmeta-item">⏳ Ждёт Сергея</span>
+        </div>
+        <div class="jcard-quote">Вы написали в 9:15. Мастер ещё не подтвердил.</div>
+      </div>
+
+      <div class="jcard">
+        <div class="jcard-top">
+          <div class="jcard-title">Установка тёплого пола в ванной — доп.работа</div>
+          <span class="jstatus js-ok">Принято</span>
+        </div>
+        <div class="jcard-meta">
+          <span class="jmeta-item">📅 18 фев</span>
+          <span class="jmeta-item">👤 Вы + Сергей</span>
+          <span class="jmeta-item">💰 +22 000 ₽</span>
+        </div>
+        <div class="jcard-quote">Обоснование: «Не было в изначальном ТЗ». Смета обновлена.</div>
+      </div>
+
+    </div>
+    <div class="fab"><button class="fab-btn" onclick="alert('Новое согласование')">+</button></div>
+  </div>
+
+  <!-- ══ SCREEN: BUDGET ══ -->
+  <div class="screen" id="screen-budget">
+    <div class="budget-hero">
+      <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;font-weight:700">Потрачено</div>
+      <div class="budget-num">1 340 000 ₽</div>
+      <div class="budget-sub">из 2 000 000 ₽ запланированных</div>
+      <div style="margin-top:14px;height:10px;border-radius:50px;background:var(--border);overflow:hidden">
+        <div style="width:67%;height:100%;border-radius:50px;background:linear-gradient(90deg,var(--green),var(--accent))"></div>
+      </div>
+      <div class="budget-row">
+        <div class="bstat"><div class="bstat-val" style="color:var(--green)">660 000 ₽</div><div class="bstat-label">Остаток</div></div>
+        <div class="bstat"><div class="bstat-val" style="color:var(--accent2)">+140 000 ₽</div><div class="bstat-label">Сверх сметы</div></div>
+        <div class="bstat"><div class="bstat-val" style="color:var(--blue)">8</div><div class="bstat-label">Транзакций</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">По категориям</div>
+      <div class="cat-list">
+        <div class="cat-item">
+          <div class="cat-top">
+            <div class="cat-name"><span class="cat-icon" style="background:rgba(59,130,246,0.12)">🔧</span>Работы</div>
+            <div><span class="cat-fact">520 000</span> <span class="cat-amt">/ 600 000 ₽</span></div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:87%;background:var(--blue)"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-top">
+            <div class="cat-name"><span class="cat-icon" style="background:rgba(245,158,11,0.12)">🧱</span>Материалы</div>
+            <div><span class="cat-fact" style="color:var(--accent2)">680 000</span> <span class="cat-amt">/ 600 000 ₽</span></div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:100%;background:var(--accent2)"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-top">
+            <div class="cat-name"><span class="cat-icon" style="background:rgba(139,92,246,0.12)">🚚</span>Доставка</div>
+            <div><span class="cat-fact">84 000</span> <span class="cat-amt">/ 100 000 ₽</span></div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:84%;background:var(--purple)"></div></div>
+        </div>
+        <div class="cat-item">
+          <div class="cat-top">
+            <div class="cat-name"><span class="cat-icon" style="background:rgba(34,197,94,0.12)">💡</span>Прочее</div>
+            <div><span class="cat-fact">56 000</span> <span class="cat-amt">/ 100 000 ₽</span></div>
+          </div>
+          <div class="cat-bar"><div class="cat-fill" style="width:56%;background:var(--green)"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Последние транзакции</div>
+      <div class="tx-list">
+        <div class="tx-item">
+          <div class="tx-left">
+            <div class="tx-icon" style="background:rgba(239,68,68,0.12)">⚠️</div>
+            <div><div class="tx-name">Плитка 23 м²</div><div class="tx-date">24 фев · Нет чека</div></div>
+          </div>
+          <span class="tx-amt tx-warn">48 600 ₽</span>
+        </div>
+        <div class="tx-item">
+          <div class="tx-left">
+            <div class="tx-icon" style="background:rgba(34,197,94,0.12)">✅</div>
+            <div><div class="tx-name">Оплата за электрику</div><div class="tx-date">22 фев · Чек прикреплён</div></div>
+          </div>
+          <span class="tx-amt tx-ok">120 000 ₽</span>
+        </div>
+        <div class="tx-item">
+          <div class="tx-left">
+            <div class="tx-icon" style="background:rgba(34,197,94,0.12)">✅</div>
+            <div><div class="tx-name">Тёплый пол в ванной</div><div class="tx-date">19 фев · Чек прикреплён</div></div>
+          </div>
+          <span class="tx-amt tx-ok">22 000 ₽</span>
+        </div>
+        <div class="tx-item">
+          <div class="tx-left">
+            <div class="tx-icon" style="background:rgba(59,130,246,0.12)">🧱</div>
+            <div><div class="tx-name">Штукатурка Knauf 40 мешков</div><div class="tx-date">14 фев · Чек прикреплён</div></div>
+          </div>
+          <span class="tx-amt tx-ok">18 400 ₽</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN: CHECKLIST ══ -->
+  <div class="screen" id="screen-check">
+
+    <div class="stage-list">
+
+      <!-- DONE -->
+      <div class="scard">
+        <div class="scard-header" onclick="toggleCard(this)">
+          <div class="scard-left">
+            <div class="scard-icon" style="background:rgba(34,197,94,0.12)">🏗️</div>
+            <div>
+              <div class="scard-name">Черновые работы</div>
+              <div class="scard-progress" style="color:var(--green)">✓ Принято · Акт подписан</div>
+            </div>
+          </div>
+          <span class="scard-arrow">›</span>
+        </div>
+        <div class="scard-body">
+          <div class="check-list">
+            <div class="check-item checked"><div class="check-box">✓</div><span class="check-text">Стяжка пола выполнена, отклонение ≤ 2 мм</span></div>
+            <div class="check-item checked"><div class="check-box">✓</div><span class="check-text">Штукатурка стен, вертикаль проверена уровнем</span></div>
+            <div class="check-item checked"><div class="check-box">✓</div><span class="check-text">Проёмы выровнены, откосы ровные</span></div>
+            <div class="check-item checked"><div class="check-box">✓</div><span class="check-text">Все трассы для проводки прорезаны</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVE -->
+      <div class="scard open" style="border-color:rgba(245,158,11,0.3)">
+        <div class="scard-header" onclick="toggleCard(this)">
+          <div class="scard-left">
+            <div class="scard-icon" style="background:rgba(245,158,11,0.12)">⚡</div>
+            <div>
+              <div class="scard-name">Электрика</div>
+              <div class="scard-progress">В работе · 3 из 7 пунктов</div>
+            </div>
+          </div>
+          <span class="scard-arrow">›</span>
+        </div>
+        <div class="scard-body">
+          <div class="check-list">
+            <div class="check-item checked" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Кабель ВВГнг-LS 3×2.5 — на розетки</span></div>
+            <div class="check-item checked" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Кабель ВВГнг-LS 3×1.5 — на освещение</span></div>
+            <div class="check-item checked" onclick="toggleCheck(this)"><div class="check-box">✓</div><span class="check-text">Щиток смонтирован, маркировка выполнена</span></div>
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Провода уложены в гофру, зафиксированы</span></div>
+            <div class="check-item warn" onclick="toggleCheck(this)">
+              <div class="check-box">!</div>
+              <div>
+                <span class="check-text">Заземление розеток проверено тестером</span>
+                <div class="check-note">⚠️ Сергей не предоставил фото тестера</div>
+              </div>
+            </div>
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">УЗО на мокрые зоны установлено и проверено</span></div>
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Схема электрики сфотографирована и сохранена</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOCKED -->
+      <div class="scard">
+        <div class="scard-header" onclick="toggleCard(this)">
+          <div class="scard-left">
+            <div class="scard-icon" style="background:rgba(139,147,167,0.1)">🚿</div>
+            <div>
+              <div class="scard-name">Сантехника</div>
+              <div class="scard-progress">Не начато · 8 пунктов</div>
+            </div>
+          </div>
+          <span class="scard-arrow">›</span>
+        </div>
+        <div class="scard-body">
+          <div class="check-list">
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Трубы холодной воды проложены, давление 6 бар</span></div>
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Трубы горячей воды проложены, теплоизолированы</span></div>
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Канализация: уклон ≥ 2 см/м, нет обратного уклона</span></div>
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Место под инсталляцию унитаза подготовлено</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOCKED -->
+      <div class="scard">
+        <div class="scard-header" onclick="toggleCard(this)">
+          <div class="scard-left">
+            <div class="scard-icon" style="background:rgba(139,147,167,0.1)">🎨</div>
+            <div>
+              <div class="scard-name">Финишная отделка</div>
+              <div class="scard-progress">Не начато · 12 пунктов</div>
+            </div>
+          </div>
+          <span class="scard-arrow">›</span>
+        </div>
+        <div class="scard-body">
+          <div class="check-list">
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Шпатлёвка нанесена в 2 слоя, шлифовка выполнена</span></div>
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Грунтовка перед покраской нанесена</span></div>
+            <div class="check-item" onclick="toggleCheck(this)"><div class="check-box"></div><span class="check-text">Покраска: равномерное нанесение, нет потёков</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM TABS -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('home',this,'Мой ремонт','Квартира на Ленина, 42')">
+      <span class="tab-icon">🏠</span>Главная
+    </button>
+    <button class="tab" onclick="switchTab('journal',this,'Журнал','Все согласования')">
+      <span class="tab-icon">📋</span>Журнал
+    </button>
+    <button class="tab" onclick="switchTab('budget',this,'Бюджет','План / Факт')">
+      <span class="tab-icon">💰</span>Бюджет
+    </button>
+    <button class="tab" onclick="switchTab('check',this,'Чек-листы','Приёмка этапов')">
+      <span class="tab-icon">✅</span>Приёмка
+    </button>
+  </div>
+</div>
+
+<script>
+function switchTab(id, btn, title, sub) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + id).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('screen-title').textContent = title;
+  document.getElementById('screen-sub').textContent = sub;
+}
+function toggleCard(header) {
+  header.closest('.scard').classList.toggle('open');
+}
+function toggleCheck(item) {
+  if(item.classList.contains('warn')) return;
+  item.classList.toggle('checked');
+}
+// filter buttons
+document.querySelectorAll('.jf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.jf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
